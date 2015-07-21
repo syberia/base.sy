@@ -6,22 +6,23 @@ error <- function(director) {
   }
 }
 
-preprocessor <- function(source_args, source, director) {
+mount <- function(director) {
+  force(director)
   error <- error(director)
-  source_args$local$mount <- function(engine, path = "") {
+  function(engine, path = "") {
     is.simple_string <- function(x) {
       is.character(x) && length(x) == 1 && !is.na(x) && nzchar(x)
     }
 
-    if (!is.simple_string(x)) {
+    if (!is(engine, "director") && !is.simple_string(engine)) {
       error("you provided an invalid engine to mount. Please ",
             "provide a single string.")
     }
 
-    if (!is.simple_string(x)) {
+    if (!identical(path, "") && !is.simple_string(path)) {
       error("you provided an invalid path to mount the ",
-            sQuote(crayon::yellow(engine)), " engine. Please ",
-            "provide a single string.")
+            if (is.character(engine)) sQuote(crayon::yellow(engine)),
+            " engine. Please provide a single string.")
     }
 
     # TODO: (RK) Make this less hacky.
@@ -31,14 +32,17 @@ preprocessor <- function(source_args, source, director) {
             " file.")
     }
 
-    if (!is.element(engine, ls(director$.cache$engines, all = TRUE))) {
-      error("you mounted the engine ", sQuote(crayon::red(engine)), ", ",
-            "but it is not defined in the",
+    if (is.character(engine) && !is.element(engine, ls(director$.cache$engines, all = TRUE))) {
+      error("you mounted the engine ",
+            if (is.character(engine)) sQuote(crayon::red(engine)),
+            ", but it is not defined in the",
             sQuote(crayon::blue("config/engines.R")), " file.")
     }
 
     # TODO: (RK) Slay this blatant violation of Demeter's laws that follows.
-    engine <- director$.cache$engines[[engine]]
+    if (!is(engine, "director")) {
+      engine <- director$.cache$engines[[engine]]
+    }
 
     for (route in names(engine$.parsers)) {
       director$register_parser(
@@ -50,6 +54,11 @@ preprocessor <- function(source_args, source, director) {
         paste0(path, route), engine$.preprocessors[[route]], overwrite = TRUE)
     }
   }
+}
+
+preprocessor <- function(source_args, source, director) {
+  error <- error(director)
+  source_args$local$mount <- mount(director)
   source()
 }
 
@@ -84,7 +93,8 @@ function(director, resource_object, output) {
         director$.cache$routes[[route]] <- director$.cache$routes[[route]] %||% character(0)
         director$.cache$routes[[route]] <- c(director$.cache$routes[[route]], controller)
 
-        controller <- director$resource(file.path('lib', 'controllers', controller))
+        controller <- director$resource(file.path('lib', 'controllers', controller),
+                                        provides = new.env(parent = environment()))
         controller <- controller$value()
       } else if (is.function(controller)) controller <- list(parser = controller)
 
