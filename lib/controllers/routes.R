@@ -1,10 +1,60 @@
-function(director, resource_object, output) {
-  error <- function(...) {
+error <- function(director) {
+  function(...) {
     stop("In your ", crayon::red("config/routes.R"), " file in the ",
          "syberia project at ", sQuote(crayon::blue(director$.root)),
          ' ', ..., call. = FALSE)
   }
+}
 
+preprocessor <- function(source_args, source, director) {
+  error <- error(director)
+  source_args$local$mount <- function(engine, path = "") {
+    is.simple_string <- function(x) {
+      is.character(x) && length(x) == 1 && !is.na(x) && nzchar(x)
+    }
+
+    if (!is.simple_string(x)) {
+      error("you provided an invalid engine to mount. Please ",
+            "provide a single string.")
+    }
+
+    if (!is.simple_string(x)) {
+      error("you provided an invalid path to mount the ",
+            sQuote(crayon::yellow(engine)), " engine. Please ",
+            "provide a single string.")
+    }
+
+    # TODO: (RK) Make this less hacky.
+    if (!is.environment(director$.cache$engines)) {
+      error("you attempted to mount an engine, but you have not defined ",
+            "any engines in the ", sQuote(crayon::blue("config/engines.R")),
+            " file.")
+    }
+
+    if (!is.element(engine, ls(director$.cache$engines, all = TRUE))) {
+      error("you mounted the engine ", sQuote(crayon::red(engine)), ", ",
+            "but it is not defined in the",
+            sQuote(crayon::blue("config/engines.R")), " file.")
+    }
+
+    # TODO: (RK) Slay this blatant violation of Demeter's laws that follows.
+    engine <- director$.cache$engines[[engine]]
+
+    for (route in names(engine$.parsers)) {
+      director$register_parser(
+        paste0(path, route), engine$.parsers[[route]], overwrite = TRUE)
+    }
+
+    for (route in names(engine$.preprocessors)) {
+      director$register_preprocessor(
+        paste0(path, route), engine$.preprocessors[[route]], overwrite = TRUE)
+    }
+  }
+  source()
+}
+
+function(director, resource_object, output) {
+  error <- error(director)
   if (!is.list(output)) {
     error("you should return a list (put it at the end of the file). ",
          "Currently, you have something of type ", sQuote(class(output)[1]), ".")
@@ -38,9 +88,10 @@ function(director, resource_object, output) {
         controller <- controller$value()
       } else if (is.function(controller)) controller <- list(parser = controller)
 
-      director$register_parser(route, controller$parser, cache = isTRUE(controller$cache))
+      director$register_parser(route, controller$parser, cache = isTRUE(controller$cache),
+                               overwrite = TRUE)
       if (is.function(controller$preprocessor)) {
-        director$register_preprocessor(route, controller$preprocessor)
+        director$register_preprocessor(route, controller$preprocessor, overwrite = TRUE)
       }
       # TODO: (RK) More validations on routes?
     })
