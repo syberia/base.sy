@@ -6,7 +6,7 @@ director$register_parser("lib/controllers",
   director$resource("lib/controllers/controller")$value()
 )
 
-# Fetch the preprocessor and routes for the routes.
+# Fetch the preprocessor and parser for the routes.
 routes <- director$resource("lib/controllers/routes")$value()
 
 # Register the routes preprocesser and parser on the routes file explicitly.
