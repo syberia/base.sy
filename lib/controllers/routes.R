@@ -58,7 +58,7 @@ mount <- function(director) {
 
 preprocessor <- function(source_env, source, director) {
   error <- error(director)
-  source_args$local$mount <- mount(director)
+  source_env$mount <- mount(director)
   source()
 }
 
