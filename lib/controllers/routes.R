@@ -26,13 +26,13 @@ mount <- function(director) {
     }
 
     # TODO: (RK) Make this less hacky.
-    if (!is.environment(director$.cache$engines)) {
+    if (!is.environment(director$cache_get("engines"))) {
       error("you attempted to mount an engine, but you have not defined ",
             "any engines in the ", sQuote(crayon::blue("config/engines.R")),
             " file.")
     }
 
-    if (is.character(engine) && !is.element(engine, ls(director$.cache$engines, all = TRUE))) {
+    if (is.character(engine) && !is.element(engine, ls(director$cache_get("engines"), all = TRUE))) {
       error("you mounted the engine ",
             if (is.character(engine)) sQuote(crayon::red(engine)),
             ", but it is not defined in the",
@@ -40,18 +40,18 @@ mount <- function(director) {
     }
 
     # TODO: (RK) Slay this blatant violation of Demeter's laws that follows.
-    if (!is(engine, "director")) {
-      engine <- director$.cache$engines[[engine]]
+    if (is.character(engine)) {
+      engine <- director$cache_get("engines")[[engine]]
     }
 
     for (route in names(engine$.parsers)) {
       director$register_parser(
-        paste0(path, route), engine$.parsers[[route]], overwrite = TRUE)
+        paste0(path, gsub("^\\/", "", route)), engine$.parsers[[route]], overwrite = TRUE)
     }
 
     for (route in names(engine$.preprocessors)) {
       director$register_preprocessor(
-        paste0(path, route), engine$.preprocessors[[route]], overwrite = TRUE)
+        paste0(path, gsub("^\\/", "", route)), engine$.preprocessors[[route]], overwrite = TRUE)
     }
   }
 }
