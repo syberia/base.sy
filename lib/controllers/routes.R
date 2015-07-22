@@ -56,13 +56,13 @@ mount <- function(director) {
   }
 }
 
-preprocessor <- function(source_args, source, director) {
+preprocessor <- function(source_env, source, director) {
   error <- error(director)
   source_args$local$mount <- mount(director)
   source()
 }
 
-function(director, resource_object, output) {
+function(director, output, any_dependencies_modified) {
   error <- error(director)
   if (!is.list(output)) {
     error("you should return a list (put it at the end of the file). ",
@@ -79,8 +79,9 @@ function(director, resource_object, output) {
 
   # Only parse the routes file if it has changed, or the project has not
   # been bootstrapped.
-  if (resource_object$any_dependencies_modified() ||
-      !isTRUE(director$.cache$bootstrapped)) {
+  if (director$resource(resource, modification_tracker.touch = FALSE,
+                        dependency_tracker.return = "any_dependencies_modified") ||
+      !isTRUE(director$cache_get("bootstrapped"))) {
     lapply(names(output), function(route) {
       controller <- output[[route]]
       if (!is.character(controller) && !is.function(controller)) {
@@ -90,16 +91,18 @@ function(director, resource_object, output) {
       }
 
       if (is.character(controller)) {
-        director$.cache$routes[[route]] <- director$.cache$routes[[route]] %||% character(0)
-        director$.cache$routes[[route]] <- c(director$.cache$routes[[route]], controller)
+        routes <- director$cache_get("routes") %||% list()
+        new_route <- routes[[route]]
+        new_route <- c(new_route, controller)
+        routes[[route]] <- new_route
+        director$cache_set("routes", routes)
 
         controller <- director$resource(file.path('lib', 'controllers', controller),
-                                        provides = new.env(parent = environment()))
-        controller <- controller$value()
+                                        defining_environment. = new.env(parent = environment()))
       } else if (is.function(controller)) controller <- list(parser = controller)
 
-      director$register_parser(route, controller$parser, cache = isTRUE(controller$cache),
-                               overwrite = TRUE)
+      director$register_parser(route, controller$parser,
+                               cache = isTRUE(controller$cache), overwrite = TRUE)
       if (is.function(controller$preprocessor)) {
         director$register_preprocessor(route, controller$preprocessor, overwrite = TRUE)
       }
