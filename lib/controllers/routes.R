@@ -1,68 +1,50 @@
+#' Merge two lists and overwrite latter entries with former entries
+#' if names are the same.
+#'
+#' For example, \code{list_merge(list(a = 1, b = 2), list(b = 3, c = 4))}
+#' will be \code{list(a = 1, b = 3, c = 4)}.
+#' @param list1 list
+#' @param list2 list
+#' @return the merged list.
+#' @examples
+#' @export
+#' stopifnot(identical(list_merge(list(a = 1, b = 2), list(b = 3, c = 4)),
+#'                     list(a = 1, b = 3, c = 4)))
+#' stopifnot(identical(list_merge(NULL, list(a = 1)), list(a = 1)))
+list_merge <- function(list1, list2) {
+  list1 <- list1 %||% list()
+  # Pre-allocate memory to make this slightly faster.
+  list1[Filter(function(x) nchar(x) > 0, names(list2) %||% c())] <- NULL
+  for (i in seq_along(list2)) {
+    name <- names(list2)[i]
+    if (!identical(name, NULL) && !identical(name, "")) list1[[name]] <- list2[[i]]
+    else list1 <- append(list1, list(list2[[i]]))
+  }
+  list1
+}
+
 error <- function(director) {
   function(...) {
     stop("In your ", crayon::red("config/routes.R"), " file in the ",
-         "syberia project at ", sQuote(crayon::blue(director$.root)),
+         "syberia project at ", sQuote(crayon::blue(director$root())),
          ' ', ..., call. = FALSE)
   }
 }
 
-mount <- function(director) {
-  force(director)
-  error <- error(director)
-  function(engine, path = "") {
-    is.simple_string <- function(x) {
-      is.character(x) && length(x) == 1 && !is.na(x) && nzchar(x)
-    }
-
-    if (!is(engine, "director") && !is.simple_string(engine)) {
-      error("you provided an invalid engine to mount. Please ",
-            "provide a single string.")
-    }
-
-    if (!identical(path, "") && !is.simple_string(path)) {
-      error("you provided an invalid path to mount the ",
-            if (is.character(engine)) sQuote(crayon::yellow(engine)),
-            " engine. Please provide a single string.")
-    }
-
-    # TODO: (RK) Make this less hacky.
-    if (!is.environment(director$.cache$engines)) {
-      error("you attempted to mount an engine, but you have not defined ",
-            "any engines in the ", sQuote(crayon::blue("config/engines.R")),
-            " file.")
-    }
-
-    if (is.character(engine) && !is.element(engine, ls(director$.cache$engines, all = TRUE))) {
-      error("you mounted the engine ",
-            if (is.character(engine)) sQuote(crayon::red(engine)),
-            ", but it is not defined in the",
-            sQuote(crayon::blue("config/engines.R")), " file.")
-    }
-
-    # TODO: (RK) Slay this blatant violation of Demeter's laws that follows.
-    if (!is(engine, "director")) {
-      engine <- director$.cache$engines[[engine]]
-    }
-
-    for (route in names(engine$.parsers)) {
-      director$register_parser(
-        paste0(path, route), engine$.parsers[[route]], overwrite = TRUE)
-    }
-
-    for (route in names(engine$.preprocessors)) {
-      director$register_preprocessor(
-        paste0(path, route), engine$.preprocessors[[route]], overwrite = TRUE)
-    }
-  }
+subroutes <- function(engine) {
+  # We must grab the child engine routes file, without looking back up
+  # to the parent.
+  engine$resource("config/routes", parse. = FALSE, parent. = FALSE)
 }
 
-preprocessor <- function(source_args, source, director) {
-  error <- error(director)
-  source_args$local$mount <- mount(director)
-  source()
-}
+function(director, output, any_dependencies_modified) {
+  # Merge on the routes of the subengines.
+  # TODO: (RK) Depth-2+ routes merging?
+  output <- list_merge(Reduce(list_merge,
+    lapply(director$.engines, function(engine) {
+      subroutes(engine$engine)
+    })), output)
 
-function(director, resource_object, output) {
   error <- error(director)
   if (!is.list(output)) {
     error("you should return a list (put it at the end of the file). ",
@@ -79,8 +61,9 @@ function(director, resource_object, output) {
 
   # Only parse the routes file if it has changed, or the project has not
   # been bootstrapped.
-  if (resource_object$any_dependencies_modified() ||
-      !isTRUE(director$.cache$bootstrapped)) {
+  if (!isTRUE(director$cache_get("bootstrapped")) ||
+      director$resource(resource, modification_tracker.touch = FALSE,
+                        dependency_tracker.return = "any_dependencies_modified")) {
     lapply(names(output), function(route) {
       controller <- output[[route]]
       if (!is.character(controller) && !is.function(controller)) {
@@ -90,16 +73,20 @@ function(director, resource_object, output) {
       }
 
       if (is.character(controller)) {
-        director$.cache$routes[[route]] <- director$.cache$routes[[route]] %||% character(0)
-        director$.cache$routes[[route]] <- c(director$.cache$routes[[route]], controller)
+        routes <- director$cache_get("routes") %||% list()
+        new_route <- routes[[route]]
+        new_route <- c(new_route, controller)
+        routes[[route]] <- new_route
+        director$cache_set("routes", routes)
 
+        # We need to provide a defining_environment to avoid parent.env(topenv())
+        # = emptyenv() issues while sourced within a package namespace.
         controller <- director$resource(file.path('lib', 'controllers', controller),
-                                        provides = new.env(parent = environment()))
-        controller <- controller$value()
+                                        defining_environment. = new.env(parent = environment()))
       } else if (is.function(controller)) controller <- list(parser = controller)
 
-      director$register_parser(route, controller$parser, cache = isTRUE(controller$cache),
-                               overwrite = TRUE)
+      director$register_parser(route, controller$parser,
+                               cache = isTRUE(controller$cache), overwrite = TRUE)
       if (is.function(controller$preprocessor)) {
         director$register_preprocessor(route, controller$preprocessor, overwrite = TRUE)
       }
