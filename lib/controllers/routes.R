@@ -34,17 +34,19 @@ error <- function(director) {
 subroutes <- function(engine) {
   # We must grab the child engine routes file, without looking back up
   # to the parent.
-  engine$resource("config/routes", parse. = FALSE, parent. = FALSE)
+  list_merge(
+    Reduce(c, lapply(Filter(function(e) isTRUE(e$mount), engine$.engines), function(subengine) {
+      subroutes(subengine$engine)
+    })),
+    engine$resource("config/routes", parse. = FALSE, parent. = FALSE)
+  )
 }
 
 function(director, output, any_dependencies_modified, args) {
   # Merge on the routes of the subengines.
   # TODO: (RK) Depth-2+ routes merging?
   if (!identical(args$recursive, FALSE)) {
-    output <- list_merge(Reduce(list_merge,
-      lapply(director$.engines, function(engine) {
-        subroutes(engine$engine)
-      })), output)
+    output <- subroutes(director)
   }
 
   error <- error(director)
