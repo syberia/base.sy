@@ -35,7 +35,7 @@ subroutes <- function(engine) {
   # We must grab the child engine routes file, without looking back up
   # to the parent.
   list_merge(
-    Reduce(c, lapply(Filter(function(e) isTRUE(e$mount), engine$.engines), function(subengine) {
+    Reduce(list_merge, lapply(Filter(function(e) isTRUE(e$mount), engine$.engines), function(subengine) {
       subroutes(subengine$engine)
     })),
     engine$resource("config/routes", parse. = FALSE, parent. = FALSE)
