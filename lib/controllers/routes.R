@@ -37,13 +37,15 @@ subroutes <- function(engine) {
   engine$resource("config/routes", parse. = FALSE, parent. = FALSE)
 }
 
-function(director, output, any_dependencies_modified) {
+function(director, output, any_dependencies_modified, args) {
   # Merge on the routes of the subengines.
   # TODO: (RK) Depth-2+ routes merging?
-  output <- list_merge(Reduce(list_merge,
-    lapply(director$.engines, function(engine) {
-      subroutes(engine$engine)
-    })), output)
+  if (!identical(args$recursive, FALSE)) {
+    output <- list_merge(Reduce(list_merge,
+      lapply(director$.engines, function(engine) {
+        subroutes(engine$engine)
+      })), output)
+  }
 
   error <- error(director)
   if (!is.list(output)) {
@@ -61,7 +63,8 @@ function(director, output, any_dependencies_modified) {
 
   # Only parse the routes file if it has changed, or the project has not
   # been bootstrapped.
-  if (!isTRUE(director$cache_get("bootstrapped")) ||
+  if (isTRUE(args$force) ||
+      !isTRUE(director$cache_get("bootstrapped")) ||
       director$resource(resource, modification_tracker.touch = FALSE,
                         dependency_tracker.return = "any_dependencies_modified")) {
     lapply(names(output), function(route) {
