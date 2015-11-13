@@ -1,5 +1,8 @@
 function(input, resource) {
-  if (exists('preprocessor', envir = input, inherits = FALSE) &&
+  ## When the director package is loaded using `devtools::load_all`,
+  ## it imports a symbol called `exists`. We use explicit base namespacing
+  ## to avoid conflicts during development.
+  if (base::exists('preprocessor', envir = input, inherits = FALSE) &&
       !is.function(input$preprocessor))
     stop("The preprocessor defined in ",
          sQuote(crayon::red(resource)),
