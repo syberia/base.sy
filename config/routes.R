@@ -5,6 +5,6 @@ list(
 
   # Testing-related
   "test"            = "test/plain",
-  "config/environments/test" = "test/config",
+  "config/environments/test" = "test/config"
 )
 
