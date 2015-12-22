@@ -17,12 +17,6 @@ if (!isTRUE(director$cache_get("bootstrapped"))) {
   config <- director$resource("lib/controllers/config")
   director$register_parser("config", config$parser)
 
-  # Register the tests preprocessor.
-  tests        <- director$resource("lib/controllers/test/plain")
-  tests_config <- director$resource("lib/controllers/test/config")
-  director$register_preprocessor("config/environments/test", tests_config$preprocessor)
-  director$register_preprocessor("test", tests$preprocessor)
-
   # Now load the routes, which will bring in all the other controllers.
   director$resource("config/routes")
 }

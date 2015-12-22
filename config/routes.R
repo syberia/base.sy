@@ -1,7 +1,10 @@
 list(
   "lib/controllers" = "controller",
   "config/routes"   = "routes",
-  "test"            = "test",
-  "config"          = "config"
+  "config"          = "config",
+
+  # Testing-related
+  "test"            = "test/plain",
+  "config/environments/test" = "test/config",
 )
 
