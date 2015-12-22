@@ -12,6 +12,13 @@
   # TODO: (RK) Fix this hack using a proper helper resource.
   #environment(routes$preprocessor)$mount(parent_engine)(director)
 
+  tests        <- director$resource("lib/controllers/test/plain")
+  tests_config <- director$resource("lib/controllers/test/config")
+  parent_engine$register_preprocessor("config/environments/test",
+                                      tests_config$preprocessor,
+                                      overwrite = TRUE)
+  parent_engine$register_preprocessor("test", tests$preprocessor, overwrite = TRUE)
+
   parent_engine$resource("config/routes")
 }
 
