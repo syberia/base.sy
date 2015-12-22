@@ -13,6 +13,10 @@ if (!isTRUE(director$cache_get("bootstrapped"))) {
   # Register the routes parser on the routes file explicitly.
   director$register_parser("config/routes", routes$parser)
 
+  # Setup config directory.
+  config <- director$resource("lib/controllers/config")
+  director$register_parser("config", config$parser)
+
   # Register the tests preprocessor.
   tests        <- director$resource("lib/controllers/test/plain")
   tests_config <- director$resource("lib/controllers/test/config")

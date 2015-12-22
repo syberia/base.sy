@@ -1,6 +1,7 @@
 list(
   "lib/controllers" = "controller",
   "config/routes"   = "routes",
-  "test"            = "test"
+  "test"            = "test",
+  "config"          = "config"
 )
 
