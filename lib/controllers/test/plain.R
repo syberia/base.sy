@@ -38,5 +38,7 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
 }
 
 # No parser.
-function(output) { output }
+function(output) {
+  invisible(output)
+}
 
