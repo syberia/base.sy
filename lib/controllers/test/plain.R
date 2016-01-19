@@ -29,11 +29,18 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
   test_args <- list(filename, env = source_env)
 
   if (is.element("reporter", names(args))) {
-    test_args$reporter <- args$reporter
+    test_args$reporter <- rep <- args$reporter
     test_args$start_end_reporter <- FALSE
+
+    if (rep$context_open) {
+      rep$end_context()
+    } else {
+      rep$context_open <- TRUE
+    }
+    rep$start_context(tested_resource)
   }
 
-  testthat::context(tested_resource)
+  library(testthat)
   do.call(testthat::test_file, test_args)
 }
 
