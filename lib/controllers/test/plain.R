@@ -28,7 +28,7 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
 
   test_args <- list(filename, env = source_env)
 
-  if (is.element("reporter", names(args))) {
+  if (is.element("reporter", names(args)) && !is.null(args$reporter)) {
     test_args$reporter <- rep <- args$reporter
     test_args$start_end_reporter <- FALSE
 
