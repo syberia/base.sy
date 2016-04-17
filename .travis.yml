@@ -1,0 +1,24 @@
+language: c
+sudo: false
+addons:
+  apt:
+    sources:
+      - r-packages-precise
+    packages:
+      - r-base-dev
+      - r-recommended
+      - pandoc
+env:
+  - global:
+    - TRAVIS=true
+    - R_LIBS_USER=~/.R/library
+cache:
+  directories:
+    ~/.R
+before_script:
+  - mkdir -p "$R_LIBS_USER"
+script: "Rscript -e 'library(syberia); library(methods); devtools::with_options(list(stub = 1), force); syberia::syberia_engine(); syberia::test_engine(); quit(status = 1);'"
+notifications:
+  email:
+    on_success: change
+    on_failure: change
