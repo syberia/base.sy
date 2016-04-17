@@ -32,11 +32,7 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
     test_args$reporter <- rep <- args$reporter
     test_args$start_end_reporter <- FALSE
 
-    if (isTRUE(rep$context_open)) {
-      rep$end_context()
-    } else {
-      rep$context_open <- TRUE
-    }
+    rep$end_context()
     rep$start_context(tested_resource)
   }
 
