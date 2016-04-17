@@ -17,7 +17,7 @@ cache:
 before_script:
 - mkdir -p "$R_LIBS_USER"
 script: Rscript -e 'library(syberia); library(methods); devtools::with_options(list(stub
-  = 1), force); syberia::syberia_engine(); syberia::test_engine(); quit(status = 1);'
+  = 1), force); tryCatch({ syberia::test_engine(); quit(status = 0) }, error = function(e) { message(e); quit(status = 1); })'
 notifications:
   email:
     on_success: change
