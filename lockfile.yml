@@ -1,0 +1,14 @@
+packages:
+  -
+    name: director
+    version: 0.3.0.5.9000
+    repo: syberia/director
+  -
+    name: syberia
+    version: 0.6.1.9007
+    repo: syberia/syberia
+    ref: 0.6-dev
+  -
+    name: bettertrace
+    version: 0.1.1
+    repo: robertzk/bettertrace
