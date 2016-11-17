@@ -11,16 +11,15 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
 
   make_tested_resource <- function(...) {
     if (is(director, "syberia_engine")) {
-      director$resource(tested_resource, ..., children. = FALSE, parent. = FALSE)
+      director$resource(..., children. = FALSE, parent. = FALSE)
     } else {
-      director$resource(tested_resource, ...)
+      director$resource(...)
     }
   }
 
-  force(resource)
   source_env$resource <- function(name, ...) {
     if (missing(name)) {
-      make_tested_resource(resource, ...)
+      make_tested_resource(tested_resource, ...)
     } else {
       make_tested_resource(...)
     }
