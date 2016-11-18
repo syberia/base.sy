@@ -10,7 +10,6 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
   }
 
   make_tested_resource <- function(name, ...) {
-    browser()
     if (is(director, "syberia_engine")) {
       director$resource(name = name, ..., children. = FALSE, parent. = FALSE)
     } else {
@@ -19,7 +18,6 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
   }
 
   source_env$resource <- function(name, ...) {
-    browser()
     if (missing(name)) {
       make_tested_resource(tested_resource, ...)
     } else {
