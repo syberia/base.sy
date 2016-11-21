@@ -9,11 +9,11 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
     stop("Please install ", crayon::yellow("testthat"), call. = FALSE)
   }
 
-  make_tested_resource <- function(...) {
+  make_tested_resource <- function(name, ...) {
     if (is(director, "syberia_engine")) {
-      director$resource(..., children. = FALSE, parent. = FALSE)
+      director$resource(name = name, ..., children. = FALSE, parent. = FALSE)
     } else {
-      director$resource(...)
+      director$resource(name = name, ...)
     }
   }
 
