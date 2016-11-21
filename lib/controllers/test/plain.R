@@ -21,7 +21,7 @@ preprocessor <- function(resource, director, source_env, source, filename, args)
     if (missing(name)) {
       make_tested_resource(tested_resource, ..., recompile. = TRUE)
     } else {
-      make_tested_resource(..., recompile. = TRUE)
+      make_tested_resource(name, ..., recompile. = TRUE)
     }
   }
 
