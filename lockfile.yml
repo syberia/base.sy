@@ -5,9 +5,9 @@ packages:
     repo: syberia/director
   -
     name: syberia
-    version: 0.6.1.9007
+    version: 0.6.1.9009
     repo: syberia/syberia
-    ref: 0.6-dev
+    ref: 0.6.1.9009
   -
     name: bettertrace
     version: 0.1.1
