@@ -25,5 +25,10 @@ notifications:
     on_success: change
     on_failure: change
   hipchat:
+    on_success: change
+    on_failure: change
+    template:
+    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
+      | Details: %{build_url} | Changes: %{compare_url}"
     rooms:
       secure: K5ZqgRc1JcB6VGlvhwM4xHevNCE7ohstEedN1Exd7OErj7oA3NOs/IcFnZK/L0FHo5WnLjet/DY2jS4IcOWm4fAcf2cTU15nlEtDK2O10d+lIp3SGprTSErX2wrGbyAeoopFWnwpaUr7/D5tq2cEYcpdqo0xAAdFSvU3PfNZhGY=
