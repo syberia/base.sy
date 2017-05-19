@@ -1,0 +1,29 @@
+language: c
+sudo: false
+addons:
+  apt:
+    sources:
+    - r-packages-precise
+    packages:
+    - r-base-dev
+    - r-recommended
+    - pandoc
+env:
+- global:
+  - TRAVIS=true
+  - R_LIBS_USER=~/.R/library
+cache:
+  directories: "~/.R"
+before_script:
+  - mkdir -p "$R_LIBS_USER"
+  - Rscript --vanilla -e 'if (length(find.package("devtools", quiet = TRUE)) == 0L) { install.packages("devtools", repos = "http://cran.rstudio.com"); devtools::install_github("hadley/devtools") }'
+  - Rscript --vanilla -e 'if (length(find.package("memoise", quiet = TRUE)) == 0L) { install.packages("memoise", repos = "http://cran.rstudio.com") }'
+script: Rscript -e 'library(syberia); library(methods); devtools::with_options(list(stub
+  = 1), force); tryCatch({ syberia::test_engine(); quit(status = 0) }, error = function(e) { message(e); quit(status = 1); })'
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  hipchat:
+    rooms:
+      secure: K5ZqgRc1JcB6VGlvhwM4xHevNCE7ohstEedN1Exd7OErj7oA3NOs/IcFnZK/L0FHo5WnLjet/DY2jS4IcOWm4fAcf2cTU15nlEtDK2O10d+lIp3SGprTSErX2wrGbyAeoopFWnwpaUr7/D5tq2cEYcpdqo0xAAdFSvU3PfNZhGY=
