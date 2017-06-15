@@ -88,7 +88,8 @@ function(director, output, any_dependencies_modified, args) {
         # = emptyenv() issues while sourced within a package namespace.
         controller <- director$resource(file.path('lib', 'controllers', controller),
                                         defining_environment. = new.env(parent = environment()))
-      } else if (is.function(controller)) controller <- list(parser = controller)
+      }
+      if (is.function(controller)) { controller <- list(parser = controller) }
 
       director$register_parser(route, controller$parser,
                                cache = isTRUE(controller$cache), overwrite = TRUE)
@@ -100,4 +101,3 @@ function(director, output, any_dependencies_modified, args) {
   }
   TRUE
 }
-
