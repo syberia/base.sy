@@ -1,3 +1,5 @@
+`%||%` <- function(x, y) { if(is.null(x)) { y } else { x } }
+
 #' Merge two lists and overwrite latter entries with former entries
 #' if names are the same.
 #'
